@@ -93,6 +93,7 @@ class ETFWeightEntry(BaseModel):
 class TrendPoint(BaseModel):
     date: str
     weight: float
+    shares: Optional[float] = None
 
 class ETFSummary(BaseModel):
     ticker: str

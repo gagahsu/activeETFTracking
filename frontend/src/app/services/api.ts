@@ -59,6 +59,7 @@ export interface OverlapStock {
 export interface TrendPoint {
   date: string;
   weight: number;
+  shares?: number;
 }
 
 export interface ETFSummary {

@@ -130,7 +130,7 @@ def get_stock_trend(db: Session, stock_ticker: str):
         if holdings:
             series.append({
                 "etf": {"ticker": etf.ticker, "name": etf.name, "provider": etf.provider},
-                "points": [{"date": h.date.isoformat(), "weight": h.weight} for h in holdings],
+                "points": [{"date": h.date.isoformat(), "weight": h.weight, "shares": h.shares} for h in holdings],
             })
     return {
         "stock": {"ticker": stock.ticker, "name": stock.name, "sector": stock.sector},
