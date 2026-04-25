@@ -88,6 +88,20 @@ class ETFWeightEntry(BaseModel):
     ticker: str
     weight: float
 
+# --- Sync increase schemas ---
+
+class ETFIncreaseEntry(BaseModel):
+    ticker: str
+    weight: float
+    prev_weight: float
+    delta: float
+
+class SyncIncreaseStock(BaseModel):
+    stock: StockSummary
+    etfs: List[ETFIncreaseEntry]
+    count: int
+    total_delta: float
+
 # --- Stock trend schemas ---
 
 class TrendPoint(BaseModel):

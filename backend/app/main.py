@@ -46,6 +46,37 @@ def read_root():
 def get_etfs(db: Session = Depends(get_db)):
     return db.query(models.ETF).all()
 
+@app.get("/dates", response_model=List[str])
+def get_all_dates(db: Session = Depends(get_db)):
+    dates = (
+        db.query(models.Holding.date)
+        .distinct()
+        .order_by(models.Holding.date.desc())
+        .all()
+    )
+    return [d[0].isoformat() for d in dates]
+
+@app.get("/stocks/sync-increase", response_model=List[schemas.SyncIncreaseStock])
+def get_sync_increase(
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+):
+    all_dates = [
+        d[0] for d in db.query(models.Holding.date).distinct().order_by(models.Holding.date.desc()).all()
+    ]
+    if not all_dates:
+        return []
+    d_to = datetime.datetime.strptime(date_to, "%Y-%m-%d").date() if date_to else all_dates[0]
+    if date_from:
+        d_from = datetime.datetime.strptime(date_from, "%Y-%m-%d").date()
+    else:
+        candidates = [d for d in all_dates if d < d_to]
+        if not candidates:
+            return []
+        d_from = candidates[0]
+    return crud.get_synchronized_increase(db, d_from, d_to)
+
 @app.get("/stocks/search", response_model=List[schemas.StockSummary])
 def search_stocks(q: str = Query(..., min_length=1), db: Session = Depends(get_db)):
     return crud.search_stocks(db, q)

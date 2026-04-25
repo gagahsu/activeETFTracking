@@ -50,6 +50,20 @@ export interface ETFWeightEntry {
   weight: number;
 }
 
+export interface ETFIncreaseEntry {
+  ticker: string;
+  weight: number;
+  prev_weight: number;
+  delta: number;
+}
+
+export interface SyncIncreaseStock {
+  stock: Stock;
+  etfs: ETFIncreaseEntry[];
+  count: number;
+  total_delta: number;
+}
+
 export interface OverlapStock {
   stock: Stock;
   etfs: ETFWeightEntry[];
@@ -109,6 +123,18 @@ export class ApiService {
     if (date2) params.push(`date2=${date2}`);
     if (params.length) url += '?' + params.join('&');
     return this.http.get<HoldingsDiff>(url);
+  }
+
+  getAllDates(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/dates`);
+  }
+
+  getSyncIncrease(dateFrom?: string, dateTo?: string): Observable<SyncIncreaseStock[]> {
+    const params: string[] = [];
+    if (dateFrom) params.push(`date_from=${dateFrom}`);
+    if (dateTo) params.push(`date_to=${dateTo}`);
+    const qs = params.length ? '?' + params.join('&') : '';
+    return this.http.get<SyncIncreaseStock[]>(`${this.apiUrl}/stocks/sync-increase${qs}`);
   }
 
   searchStocks(q: string): Observable<Stock[]> {

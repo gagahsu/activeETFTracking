@@ -138,6 +138,39 @@ def get_stock_trend(db: Session, stock_ticker: str):
     }
 
 
+def get_synchronized_increase(db: Session, date_from: datetime.date, date_to: datetime.date) -> list:
+    etfs = db.query(models.ETF).all()
+    stock_map: dict = {}
+
+    for etf in etfs:
+        has_from = db.query(models.Holding).filter(
+            models.Holding.etf_id == etf.id, models.Holding.date == date_from
+        ).first()
+        has_to = db.query(models.Holding).filter(
+            models.Holding.etf_id == etf.id, models.Holding.date == date_to
+        ).first()
+        if not has_from or not has_to:
+            continue
+
+        diff = compute_diff(db, etf.id, date_from, date_to)
+        for item in diff["increased"]:
+            ticker = item["stock"]["ticker"]
+            if ticker not in stock_map:
+                stock_map[ticker] = {"stock": item["stock"], "etfs": []}
+            stock_map[ticker]["etfs"].append({
+                "ticker": etf.ticker,
+                "weight": item["weight"],
+                "prev_weight": item["prev_weight"],
+                "delta": item["delta"],
+            })
+
+    result = [
+        {**v, "count": len(v["etfs"]), "total_delta": round(sum(e["delta"] for e in v["etfs"]), 2)}
+        for v in stock_map.values()
+    ]
+    return sorted(result, key=lambda x: (-x["count"], -x["total_delta"]))
+
+
 def get_radar(db: Session, target_date: datetime.date, mode: str) -> list:
     etfs = db.query(models.ETF).all()
     stock_map: dict = {}

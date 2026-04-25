@@ -5,6 +5,7 @@ import { HoldingsChangesComponent } from './components/holdings-changes/holdings
 import { HoldingsOverlapComponent } from './components/holdings-overlap/holdings-overlap';
 import { RadarComponent } from './components/radar/radar';
 import { StockTrendComponent } from './components/stock-trend/stock-trend';
+import { SyncIncreaseComponent } from './components/sync-increase/sync-increase';
 
 export const routes: Routes = [
   { path: '', component: DashboardComponent },
@@ -15,5 +16,6 @@ export const routes: Routes = [
   { path: 'radar/sell', component: RadarComponent },
   { path: 'radar', redirectTo: 'radar/buy', pathMatch: 'full' },
   { path: 'trend', component: StockTrendComponent },
+  { path: 'sync-increase', component: SyncIncreaseComponent },
   { path: '**', redirectTo: '' },
 ];
