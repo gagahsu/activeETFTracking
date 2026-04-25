@@ -16,7 +16,7 @@ import { SidebarComponent } from './components/sidebar/sidebar';
   `,
   styles: [`
     .app-container { display: flex; min-height: 100vh; }
-    .content { flex: 1; margin-left: 260px; padding: 30px; background: #f8fafc; }
+    .content { flex: 1; margin-left: 240px; padding: 32px 36px; background: #f8fafc; transition: margin-left 0.2s; }
   `],
 })
 export class App {

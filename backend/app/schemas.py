@@ -40,7 +40,7 @@ class ETFCreate(ETFBase):
 
 class ETF(ETFBase):
     id: int
-    
+
     class Config:
         from_attributes = True
 
@@ -58,3 +58,37 @@ class MarketData(MarketDataBase):
 
     class Config:
         from_attributes = True
+
+# --- Diff / Compare schemas ---
+
+class StockSummary(BaseModel):
+    ticker: str
+    name: str
+    sector: Optional[str] = None
+
+class HoldingChange(BaseModel):
+    stock: StockSummary
+    weight: float
+    prev_weight: Optional[float] = None
+    delta: Optional[float] = None
+    shares: Optional[float] = None
+
+class HoldingsDiff(BaseModel):
+    date1: Optional[str] = None
+    date2: str
+    added: List[HoldingChange] = []
+    increased: List[HoldingChange] = []
+    decreased: List[HoldingChange] = []
+    removed: List[HoldingChange] = []
+    unchanged: List[HoldingChange] = []
+
+# --- Overlap schemas ---
+
+class ETFWeightEntry(BaseModel):
+    ticker: str
+    weight: float
+
+class OverlapStock(BaseModel):
+    stock: StockSummary
+    etfs: List[ETFWeightEntry] = []
+    count: int
