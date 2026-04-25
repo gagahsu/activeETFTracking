@@ -18,6 +18,7 @@ const TOP_NAV: NavItem[] = [
   { id: 'radar-sell',icon: '📉', label: '賣出雷達',  sub: '多ETF同步賣出',   route: '/radar/sell' },
   { id: 'trend',        icon: '〜',  label: '個股追蹤',  sub: '持倉規模與增減追蹤',   route: '/trend' },
   { id: 'sync-increase',icon: '⬆',  label: '同步加碼',  sub: '區間內多ETF同步加碼',  route: '/sync-increase' },
+  { id: 'chart',        icon: '📉', label: '技術線型',  sub: '均線・布林・RSI・MACD', route: '/chart' },
 ];
 
 @Component({

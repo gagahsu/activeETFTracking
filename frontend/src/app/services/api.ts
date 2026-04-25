@@ -92,6 +92,25 @@ export interface StockTrendResponse {
   series: ETFTrendSeries[];
 }
 
+export interface CandlePoint {
+  date: string; open: number; high: number; close: number; low: number; volume: number;
+}
+export interface MAPoint { date: string; value: number; }
+export interface BollingerPoint { date: string; upper: number; middle: number; lower: number; }
+export interface RSIPoint { date: string; value: number; }
+export interface MACDPoint { date: string; macd: number; signal?: number; histogram?: number; }
+export interface ETFChartData {
+  ticker: string;
+  signal: string;
+  signal_reason: string;
+  candles: CandlePoint[];
+  ma5: MAPoint[];
+  ma20: MAPoint[];
+  bollinger: BollingerPoint[];
+  rsi: RSIPoint[];
+  macd: MACDPoint[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private apiUrl = 'http://localhost:8000';
@@ -123,6 +142,10 @@ export class ApiService {
     if (date2) params.push(`date2=${date2}`);
     if (params.length) url += '?' + params.join('&');
     return this.http.get<HoldingsDiff>(url);
+  }
+
+  getETFChart(ticker: string, days = 90): Observable<ETFChartData> {
+    return this.http.get<ETFChartData>(`${this.apiUrl}/etfs/${ticker}/chart?days=${days}`);
   }
 
   getAllDates(): Observable<string[]> {

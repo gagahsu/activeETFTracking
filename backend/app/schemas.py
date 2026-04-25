@@ -102,6 +102,47 @@ class SyncIncreaseStock(BaseModel):
     count: int
     total_delta: float
 
+# --- ETF technical chart schemas ---
+
+class CandlePoint(BaseModel):
+    date: str
+    open: float
+    high: float
+    close: float
+    low: float
+    volume: float
+
+class MAPoint(BaseModel):
+    date: str
+    value: float
+
+class BollingerPoint(BaseModel):
+    date: str
+    upper: float
+    middle: float
+    lower: float
+
+class RSIPoint(BaseModel):
+    date: str
+    value: float
+
+class MACDPoint(BaseModel):
+    date: str
+    macd: float
+    signal: Optional[float] = None
+    histogram: Optional[float] = None
+
+class ETFChartData(BaseModel):
+    ticker: str
+    signal: str
+    signal_reason: str
+    candles: List[CandlePoint]
+    ma5: List[MAPoint]
+    ma20: List[MAPoint]
+    bollinger: List[BollingerPoint]
+    rsi: List[RSIPoint]
+    macd: List[MACDPoint]
+
 # --- Stock trend schemas ---
 
 class TrendPoint(BaseModel):

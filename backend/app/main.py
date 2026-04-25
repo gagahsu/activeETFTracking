@@ -131,6 +131,13 @@ def get_holdings_overlap(
 
     return crud.get_overlap(db, target_date, min_count)
 
+@app.get("/etfs/{ticker}/chart", response_model=schemas.ETFChartData)
+def get_etf_chart(ticker: str, days: int = Query(90, ge=30, le=180), db: Session = Depends(get_db)):
+    db_etf = db.query(models.ETF).filter(models.ETF.ticker == ticker).first()
+    if not db_etf:
+        raise HTTPException(status_code=404, detail="ETF not found")
+    return crud.generate_mock_chart(ticker, days)
+
 @app.get("/etfs/{ticker}", response_model=schemas.ETFDetail)
 def get_etf_detail(ticker: str, db: Session = Depends(get_db)):
     db_etf = db.query(models.ETF).filter(models.ETF.ticker == ticker).first()

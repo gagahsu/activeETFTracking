@@ -1,6 +1,114 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
 import datetime
+import math
+import random as _random
+
+def _biz_days(n: int) -> list:
+    dates, d = [], datetime.date.today()
+    while len(dates) < n:
+        if d.weekday() < 5:
+            dates.append(d)
+        d -= datetime.timedelta(days=1)
+    return list(reversed(dates))
+
+def _ema(data: list, period: int) -> list:
+    if len(data) < period:
+        return [None] * len(data)
+    result = [None] * (period - 1)
+    result.append(sum(data[:period]) / period)
+    k = 2 / (period + 1)
+    for i in range(period, len(data)):
+        result.append(result[-1] * (1 - k) + data[i] * k)
+    return result
+
+def generate_mock_chart(ticker: str, days: int = 90) -> dict:
+    seed = sum(ord(c) * (i + 1) for i, c in enumerate(ticker))
+    rng = _random.Random(seed)
+
+    base = 14 + rng.random() * 12
+    closes = [base]
+    for _ in range(days - 1):
+        closes.append(max(5.0, closes[-1] * (1 + rng.gauss(0.0005, 0.012))))
+
+    dates = _biz_days(days)
+
+    candles = []
+    for i, (dt, close) in enumerate(zip(dates, closes)):
+        prev = closes[i - 1] if i > 0 else close
+        open_ = round(prev * (1 + rng.gauss(0, 0.004)), 2)
+        high = round(max(open_, close) * (1 + abs(rng.gauss(0, 0.006))), 2)
+        low  = round(min(open_, close) * (1 - abs(rng.gauss(0, 0.006))), 2)
+        candles.append({"date": dt.isoformat(), "open": open_, "high": high,
+                        "close": round(close, 2), "low": low,
+                        "volume": float(int(rng.uniform(300_000, 3_000_000)))})
+
+    def ma(period):
+        return [{"date": dates[i].isoformat(),
+                 "value": round(sum(closes[i - period + 1:i + 1]) / period, 2)}
+                for i in range(period - 1, len(closes))]
+
+    ma5, ma20 = ma(5), ma(20)
+
+    bollinger = []
+    for i in range(19, len(closes)):
+        w = closes[i - 19:i + 1]
+        mid = sum(w) / 20
+        std = math.sqrt(sum((x - mid) ** 2 for x in w) / 20)
+        bollinger.append({"date": dates[i].isoformat(),
+                          "upper": round(mid + 2 * std, 2),
+                          "middle": round(mid, 2),
+                          "lower": round(mid - 2 * std, 2)})
+
+    rsi_out = []
+    gains = [max(0, closes[i] - closes[i - 1]) for i in range(1, len(closes))]
+    losses = [max(0, closes[i - 1] - closes[i]) for i in range(1, len(closes))]
+    if len(gains) >= 14:
+        ag = sum(gains[:14]) / 14
+        al = sum(losses[:14]) / 14
+        for i in range(13, len(closes)):
+            if i > 13:
+                ag = (ag * 13 + gains[i - 1]) / 14
+                al = (al * 13 + losses[i - 1]) / 14
+            val = 100.0 if al == 0 else round(100 - 100 / (1 + ag / al), 2)
+            rsi_out.append({"date": dates[i].isoformat(), "value": val})
+
+    ema12, ema26 = _ema(closes, 12), _ema(closes, 26)
+    macd_line = [None if (a is None or b is None) else round(a - b, 4)
+                 for a, b in zip(ema12, ema26)]
+    valid_macd = [v for v in macd_line if v is not None]
+    offset = next(i for i, v in enumerate(macd_line) if v is not None)
+    sig_ema = _ema(valid_macd, 9)
+    sig_line = [None] * offset + [None if v is None else round(v, 4) for v in sig_ema]
+
+    macd_out = []
+    for i, m in enumerate(macd_line):
+        if m is None:
+            continue
+        s = sig_line[i] if i < len(sig_line) else None
+        h = round(m - s, 4) if s is not None else None
+        macd_out.append({"date": dates[i].isoformat(), "macd": m, "signal": s, "histogram": h})
+
+    last_rsi  = rsi_out[-1]["value"] if rsi_out else 50
+    last_close = closes[-1]
+    last_ma20  = ma20[-1]["value"] if ma20 else last_close
+    last_hist  = next((d["histogram"] for d in reversed(macd_out) if d.get("histogram") is not None), 0)
+
+    if last_rsi < 35 and last_hist > 0:
+        sig, reason = "進場布局", f"RSI {last_rsi:.0f} 超賣 + MACD 柱狀翻正，動能轉強"
+    elif last_rsi > 68 and last_hist < 0:
+        sig, reason = "謹慎退場", f"RSI {last_rsi:.0f} 超買 + MACD 柱狀翻負，留意高檔壓力"
+    elif last_close > last_ma20 and last_hist > 0:
+        sig, reason = "多頭偏多", f"股價站上 MA20 ({last_ma20:.2f})，MACD 動能持續向上"
+    elif last_close < last_ma20 and last_hist < 0:
+        sig, reason = "空頭偏弱", f"股價跌破 MA20 ({last_ma20:.2f})，MACD 動能轉弱"
+    else:
+        sig, reason = "中性觀望", "技術面無明顯方向，建議等待訊號確認"
+
+    return {"ticker": ticker, "signal": sig, "signal_reason": reason,
+            "candles": candles, "ma5": ma5, "ma20": ma20,
+            "bollinger": bollinger, "rsi": rsi_out, "macd": macd_out}
+
 
 def get_etf_by_ticker(db: Session, ticker: str):
     return db.query(models.ETF).filter(models.ETF.ticker == ticker).first()
