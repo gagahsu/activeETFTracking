@@ -70,6 +70,16 @@ export interface OverlapStock {
   count: number;
 }
 
+export interface UniqueHoldingEntry {
+  stock: Stock;
+  weight: number;
+}
+
+export interface ETFUniqueHoldings {
+  etf_ticker: string;
+  stocks: UniqueHoldingEntry[];
+}
+
 export interface TrendPoint {
   date: string;
   weight: number;
@@ -172,6 +182,11 @@ export class ApiService {
     let url = `${this.apiUrl}/radar?mode=${mode}`;
     if (date) url += `&date=${date}`;
     return this.http.get<OverlapStock[]>(url);
+  }
+
+  getUniqueHoldings(date?: string): Observable<ETFUniqueHoldings[]> {
+    const qs = date ? `?date=${date}` : '';
+    return this.http.get<ETFUniqueHoldings[]>(`${this.apiUrl}/etfs/unique-holdings${qs}`);
   }
 
   getOverlap(date?: string, minCount = 2): Observable<OverlapStock[]> {

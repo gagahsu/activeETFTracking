@@ -305,6 +305,39 @@ def get_radar(db: Session, target_date: datetime.date, mode: str) -> list:
     return sorted(result, key=lambda x: (-x["count"], -sum(e["weight"] for e in x["etfs"])))
 
 
+def get_unique_holdings(db: Session, target_date: datetime.date) -> list:
+    etfs = db.query(models.ETF).all()
+    stock_map: dict = {}
+
+    for etf in etfs:
+        holdings = get_holdings_for_date(db, etf.id, target_date)
+        for h in holdings:
+            ticker = h.stock.ticker
+            if ticker not in stock_map:
+                stock_map[ticker] = {
+                    "stock": {"ticker": h.stock.ticker, "name": h.stock.name, "sector": h.stock.sector},
+                    "etfs": [],
+                }
+            stock_map[ticker]["etfs"].append({"ticker": etf.ticker, "weight": h.weight})
+
+    etf_groups: dict = {}
+    for item in stock_map.values():
+        if len(item["etfs"]) == 1:
+            etf_ticker = item["etfs"][0]["ticker"]
+            if etf_ticker not in etf_groups:
+                etf_groups[etf_ticker] = []
+            etf_groups[etf_ticker].append({
+                "stock": item["stock"],
+                "weight": item["etfs"][0]["weight"],
+            })
+
+    result = [
+        {"etf_ticker": t, "stocks": sorted(s, key=lambda x: -x["weight"])}
+        for t, s in etf_groups.items()
+    ]
+    return sorted(result, key=lambda x: -len(x["stocks"]))
+
+
 def get_overlap(db: Session, target_date: datetime.date, min_count: int = 2) -> list:
     etfs = db.query(models.ETF).all()
     stock_map: dict = {}

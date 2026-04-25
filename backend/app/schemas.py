@@ -88,6 +88,19 @@ class ETFWeightEntry(BaseModel):
     ticker: str
     weight: float
 
+class OverlapStock(BaseModel):
+    stock: StockSummary
+    etfs: List[ETFWeightEntry] = []
+    count: int
+
+class UniqueHoldingEntry(BaseModel):
+    stock: StockSummary
+    weight: float
+
+class ETFUniqueHoldings(BaseModel):
+    etf_ticker: str
+    stocks: List[UniqueHoldingEntry]
+
 # --- Sync increase schemas ---
 
 class ETFIncreaseEntry(BaseModel):

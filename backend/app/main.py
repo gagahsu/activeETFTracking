@@ -109,7 +109,21 @@ def get_radar(
     return crud.get_radar(db, target_date, mode)
 
 
-# NOTE: /etfs/overlap must be declared before /etfs/{ticker} to avoid route conflict
+# NOTE: /etfs/unique-holdings and /etfs/overlap must be declared before /etfs/{ticker}
+@app.get("/etfs/unique-holdings", response_model=List[schemas.ETFUniqueHoldings])
+def get_unique_etf_holdings(
+    date_str: Optional[str] = Query(None, alias="date"),
+    db: Session = Depends(get_db),
+):
+    if date_str:
+        target_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+    else:
+        latest = db.query(models.Holding.date).order_by(models.Holding.date.desc()).first()
+        if not latest:
+            return []
+        target_date = latest[0]
+    return crud.get_unique_holdings(db, target_date)
+
 @app.get("/etfs/overlap", response_model=List[schemas.OverlapStock])
 def get_holdings_overlap(
     date_str: Optional[str] = Query(None, alias="date"),
