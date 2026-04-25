@@ -4,6 +4,7 @@ import { EtfDetailComponent } from './components/etf-detail/etf-detail';
 import { HoldingsChangesComponent } from './components/holdings-changes/holdings-changes';
 import { HoldingsOverlapComponent } from './components/holdings-overlap/holdings-overlap';
 import { RadarComponent } from './components/radar/radar';
+import { StockTrendComponent } from './components/stock-trend/stock-trend';
 
 export const routes: Routes = [
   { path: '', component: DashboardComponent },
@@ -13,5 +14,6 @@ export const routes: Routes = [
   { path: 'radar/buy', component: RadarComponent },
   { path: 'radar/sell', component: RadarComponent },
   { path: 'radar', redirectTo: 'radar/buy', pathMatch: 'full' },
+  { path: 'trend', component: StockTrendComponent },
   { path: '**', redirectTo: '' },
 ];

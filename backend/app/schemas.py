@@ -88,7 +88,21 @@ class ETFWeightEntry(BaseModel):
     ticker: str
     weight: float
 
-class OverlapStock(BaseModel):
+# --- Stock trend schemas ---
+
+class TrendPoint(BaseModel):
+    date: str
+    weight: float
+
+class ETFSummary(BaseModel):
+    ticker: str
+    name: str
+    provider: str
+
+class ETFTrendSeries(BaseModel):
+    etf: ETFSummary
+    points: List[TrendPoint]
+
+class StockTrendResponse(BaseModel):
     stock: StockSummary
-    etfs: List[ETFWeightEntry] = []
-    count: int
+    series: List[ETFTrendSeries]

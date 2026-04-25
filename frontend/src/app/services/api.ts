@@ -56,6 +56,27 @@ export interface OverlapStock {
   count: number;
 }
 
+export interface TrendPoint {
+  date: string;
+  weight: number;
+}
+
+export interface ETFSummary {
+  ticker: string;
+  name: string;
+  provider: string;
+}
+
+export interface ETFTrendSeries {
+  etf: ETFSummary;
+  points: TrendPoint[];
+}
+
+export interface StockTrendResponse {
+  stock: Stock;
+  series: ETFTrendSeries[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private apiUrl = 'http://localhost:8000';
@@ -87,6 +108,14 @@ export class ApiService {
     if (date2) params.push(`date2=${date2}`);
     if (params.length) url += '?' + params.join('&');
     return this.http.get<HoldingsDiff>(url);
+  }
+
+  searchStocks(q: string): Observable<Stock[]> {
+    return this.http.get<Stock[]>(`${this.apiUrl}/stocks/search?q=${encodeURIComponent(q)}`);
+  }
+
+  getStockTrend(ticker: string): Observable<StockTrendResponse> {
+    return this.http.get<StockTrendResponse>(`${this.apiUrl}/stocks/trend?ticker=${encodeURIComponent(ticker)}`);
   }
 
   getRadar(mode: 'buy' | 'sell', date?: string): Observable<OverlapStock[]> {

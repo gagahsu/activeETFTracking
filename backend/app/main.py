@@ -46,6 +46,18 @@ def read_root():
 def get_etfs(db: Session = Depends(get_db)):
     return db.query(models.ETF).all()
 
+@app.get("/stocks/search", response_model=List[schemas.StockSummary])
+def search_stocks(q: str = Query(..., min_length=1), db: Session = Depends(get_db)):
+    return crud.search_stocks(db, q)
+
+@app.get("/stocks/trend", response_model=schemas.StockTrendResponse)
+def get_stock_trend(ticker: str = Query(...), db: Session = Depends(get_db)):
+    result = crud.get_stock_trend(db, ticker)
+    if not result:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    return result
+
+
 @app.get("/radar", response_model=List[schemas.OverlapStock])
 def get_radar(
     mode: str = Query("buy", pattern="^(buy|sell)$"),

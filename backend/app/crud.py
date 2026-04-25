@@ -103,6 +103,41 @@ def compute_diff(db: Session, etf_id: int, date1: datetime.date, date2: datetime
         "unchanged": sorted(unchanged, key=lambda x: x["weight"], reverse=True),
     }
 
+def search_stocks(db: Session, query: str, limit: int = 15) -> list:
+    q = f"%{query}%"
+    return (
+        db.query(models.Stock)
+        .join(models.Holding)
+        .filter((models.Stock.ticker.ilike(q)) | (models.Stock.name.ilike(q)))
+        .distinct()
+        .limit(limit)
+        .all()
+    )
+
+def get_stock_trend(db: Session, stock_ticker: str):
+    stock = db.query(models.Stock).filter(models.Stock.ticker == stock_ticker).first()
+    if not stock:
+        return None
+    etfs = db.query(models.ETF).all()
+    series = []
+    for etf in etfs:
+        holdings = (
+            db.query(models.Holding)
+            .filter(models.Holding.etf_id == etf.id, models.Holding.stock_id == stock.id)
+            .order_by(models.Holding.date)
+            .all()
+        )
+        if holdings:
+            series.append({
+                "etf": {"ticker": etf.ticker, "name": etf.name, "provider": etf.provider},
+                "points": [{"date": h.date.isoformat(), "weight": h.weight} for h in holdings],
+            })
+    return {
+        "stock": {"ticker": stock.ticker, "name": stock.name, "sector": stock.sector},
+        "series": series,
+    }
+
+
 def get_radar(db: Session, target_date: datetime.date, mode: str) -> list:
     etfs = db.query(models.ETF).all()
     stock_map: dict = {}
