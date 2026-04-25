@@ -12,8 +12,10 @@ interface NavItem {
 }
 
 const TOP_NAV: NavItem[] = [
-  { id: 'overview',         icon: '▦',  label: 'ETF 總覽',  sub: '主動式ETF清單',     route: '/' },
-  { id: 'overlap',          icon: '⊙',  label: '持股重疊',  sub: '跨ETF共同持股',     route: '/overlap' },
+  { id: 'overview',  icon: '▦',  label: 'ETF 總覽',  sub: '主動式ETF清單',  route: '/' },
+  { id: 'overlap',   icon: '⊙',  label: '持股重疊',  sub: '跨ETF共同持股',  route: '/overlap' },
+  { id: 'radar-buy', icon: '📈', label: '新增雷達',  sub: '多ETF同步買入',   route: '/radar/buy' },
+  { id: 'radar-sell',icon: '📉', label: '賣出雷達',  sub: '多ETF同步賣出',   route: '/radar/sell' },
 ];
 
 @Component({

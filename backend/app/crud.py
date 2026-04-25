@@ -103,6 +103,32 @@ def compute_diff(db: Session, etf_id: int, date1: datetime.date, date2: datetime
         "unchanged": sorted(unchanged, key=lambda x: x["weight"], reverse=True),
     }
 
+def get_radar(db: Session, target_date: datetime.date, mode: str) -> list:
+    etfs = db.query(models.ETF).all()
+    stock_map: dict = {}
+
+    for etf in etfs:
+        prev = (
+            db.query(models.Holding.date)
+            .filter(models.Holding.etf_id == etf.id, models.Holding.date < target_date)
+            .distinct()
+            .order_by(models.Holding.date.desc())
+            .first()
+        )
+        if not prev:
+            continue
+        diff = compute_diff(db, etf.id, prev[0], target_date)
+        items = diff["added"] if mode == "buy" else diff["removed"]
+        for item in items:
+            ticker = item["stock"]["ticker"]
+            if ticker not in stock_map:
+                stock_map[ticker] = {"stock": item["stock"], "etfs": []}
+            stock_map[ticker]["etfs"].append({"ticker": etf.ticker, "weight": item["weight"]})
+
+    result = [{**v, "count": len(v["etfs"])} for v in stock_map.values()]
+    return sorted(result, key=lambda x: (-x["count"], -sum(e["weight"] for e in x["etfs"])))
+
+
 def get_overlap(db: Session, target_date: datetime.date, min_count: int = 2) -> list:
     etfs = db.query(models.ETF).all()
     stock_map: dict = {}

@@ -89,6 +89,12 @@ export class ApiService {
     return this.http.get<HoldingsDiff>(url);
   }
 
+  getRadar(mode: 'buy' | 'sell', date?: string): Observable<OverlapStock[]> {
+    let url = `${this.apiUrl}/radar?mode=${mode}`;
+    if (date) url += `&date=${date}`;
+    return this.http.get<OverlapStock[]>(url);
+  }
+
   getOverlap(date?: string, minCount = 2): Observable<OverlapStock[]> {
     let url = `${this.apiUrl}/etfs/overlap?min_count=${minCount}`;
     if (date) url += `&date=${date}`;

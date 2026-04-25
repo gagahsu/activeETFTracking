@@ -46,6 +46,26 @@ def read_root():
 def get_etfs(db: Session = Depends(get_db)):
     return db.query(models.ETF).all()
 
+@app.get("/radar", response_model=List[schemas.OverlapStock])
+def get_radar(
+    mode: str = Query("buy", pattern="^(buy|sell)$"),
+    date_str: Optional[str] = Query(None, alias="date"),
+    db: Session = Depends(get_db),
+):
+    if date_str:
+        target_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+    else:
+        latest = (
+            db.query(models.Holding.date)
+            .order_by(models.Holding.date.desc())
+            .first()
+        )
+        if not latest:
+            return []
+        target_date = latest[0]
+    return crud.get_radar(db, target_date, mode)
+
+
 # NOTE: /etfs/overlap must be declared before /etfs/{ticker} to avoid route conflict
 @app.get("/etfs/overlap", response_model=List[schemas.OverlapStock])
 def get_holdings_overlap(
