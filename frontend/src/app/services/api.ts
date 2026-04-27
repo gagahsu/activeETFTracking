@@ -33,6 +33,8 @@ export interface HoldingChange {
   prev_weight?: number;
   delta?: number;
   shares?: number;
+  prev_shares?: number;
+  delta_shares?: number;
 }
 
 export interface HoldingsDiff {
@@ -48,6 +50,8 @@ export interface HoldingsDiff {
 export interface ETFWeightEntry {
   ticker: string;
   weight: number;
+  shares?: number;
+  delta_shares?: number;
 }
 
 export interface ETFIncreaseEntry {
@@ -55,6 +59,9 @@ export interface ETFIncreaseEntry {
   weight: number;
   prev_weight: number;
   delta: number;
+  shares?: number;
+  prev_shares?: number;
+  delta_shares?: number;
 }
 
 export interface SyncIncreaseStock {
@@ -62,6 +69,7 @@ export interface SyncIncreaseStock {
   etfs: ETFIncreaseEntry[];
   count: number;
   total_delta: number;
+  total_delta_shares?: number;
 }
 
 export interface OverlapStock {

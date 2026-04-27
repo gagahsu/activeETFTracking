@@ -72,6 +72,8 @@ class HoldingChange(BaseModel):
     prev_weight: Optional[float] = None
     delta: Optional[float] = None
     shares: Optional[float] = None
+    prev_shares: Optional[float] = None
+    delta_shares: Optional[float] = None
 
 class HoldingsDiff(BaseModel):
     date1: Optional[str] = None
@@ -87,6 +89,8 @@ class HoldingsDiff(BaseModel):
 class ETFWeightEntry(BaseModel):
     ticker: str
     weight: float
+    shares: Optional[float] = None
+    delta_shares: Optional[float] = None
 
 class OverlapStock(BaseModel):
     stock: StockSummary
@@ -96,6 +100,7 @@ class OverlapStock(BaseModel):
 class UniqueHoldingEntry(BaseModel):
     stock: StockSummary
     weight: float
+    shares: Optional[float] = None
 
 class ETFUniqueHoldings(BaseModel):
     etf_ticker: str
@@ -108,12 +113,16 @@ class ETFIncreaseEntry(BaseModel):
     weight: float
     prev_weight: float
     delta: float
+    shares: Optional[float] = None
+    prev_shares: Optional[float] = None
+    delta_shares: Optional[float] = None
 
 class SyncIncreaseStock(BaseModel):
     stock: StockSummary
     etfs: List[ETFIncreaseEntry]
     count: int
     total_delta: float
+    total_delta_shares: Optional[float] = None
 
 # --- ETF technical chart schemas ---
 

@@ -20,7 +20,7 @@ const PALETTE = ['#2563eb', '#7c3aed', '#ea580c', '#16a34a', '#db2777', '#f59e0b
       <header>
         <div class="header-text">
           <h1>同步加碼</h1>
-          <p class="subtitle">指定時間區間，找出各 ETF 同步提高比重的個股</p>
+          <p class="subtitle">指定時間區間，找出各 ETF 同步提高股數的個股</p>
         </div>
       </header>
 
@@ -66,7 +66,7 @@ const PALETTE = ['#2563eb', '#7c3aed', '#ea580c', '#16a34a', '#db2777', '#f59e0b
           </div>
           <div class="stat-card">
             <div class="stat-value">{{ topDelta() | number:'1.2-2' }}%</div>
-            <div class="stat-label">最大合計加碼幅度</div>
+            <div class="stat-label">最大合計加碼比重</div>
           </div>
         </div>
 
@@ -80,7 +80,7 @@ const PALETTE = ['#2563eb', '#7c3aed', '#ea580c', '#16a34a', '#db2777', '#f59e0b
         <!-- Section header -->
         <div class="section-header" *ngIf="items().length > 0">
           <span class="section-title">加碼個股清單</span>
-          <span class="section-hint">依加碼 ETF 數排序，同數量者依合計加碼幅度排序</span>
+          <span class="section-hint">依加碼 ETF 數排序，同數量者依合計加碼股數排序</span>
         </div>
 
         <!-- Stock list -->
@@ -94,6 +94,9 @@ const PALETTE = ['#2563eb', '#7c3aed', '#ea580c', '#16a34a', '#db2777', '#f59e0b
                 <span class="stock-name">{{ item.stock.name }}</span>
                 <span class="stock-ticker">{{ item.stock.ticker }}</span>
               </div>
+              <div class="total-shares-info" *ngIf="item.total_delta_shares">
+                合計買進 <span class="highlight">{{ item.total_delta_shares / 1000 | number:'1.0-0' }}</span> 張
+              </div>
               <span class="sector-tag" *ngIf="item.stock.sector">{{ item.stock.sector }}</span>
             </div>
 
@@ -102,18 +105,20 @@ const PALETTE = ['#2563eb', '#7c3aed', '#ea580c', '#16a34a', '#db2777', '#f59e0b
                 [style.border-color]="etfColor(e.ticker) + '40'"
                 [style.background]="etfColor(e.ticker) + '0d'">
                 <span class="etf-code" [style.color]="etfColor(e.ticker)">{{ e.ticker }}</span>
+                <div class="share-change" *ngIf="e.delta_shares">
+                  +{{ e.delta_shares / 1000 | number:'1.0-0' }} 張
+                </div>
                 <div class="weight-change">
                   <span class="prev-w">{{ e.prev_weight | number:'1.2-2' }}%</span>
                   <span class="arrow-right">→</span>
                   <span class="curr-w" [style.color]="etfColor(e.ticker)">{{ e.weight | number:'1.2-2' }}%</span>
                 </div>
-                <span class="delta-pill">▲ {{ e.delta | number:'1.2-2' }}%</span>
               </div>
             </div>
 
             <div class="total-col">
               <div class="total-delta">▲ {{ item.total_delta | number:'1.2-2' }}%</div>
-              <div class="total-label">合計加碼</div>
+              <div class="total-label">合計加碼比重</div>
             </div>
           </div>
         </div>
@@ -195,6 +200,8 @@ const PALETTE = ['#2563eb', '#7c3aed', '#ea580c', '#16a34a', '#db2777', '#f59e0b
       font-family: ui-monospace, monospace; font-size: 11px; color: #64748b;
       background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
     }
+    .total-shares-info { font-size: 12px; color: #64748b; margin-top: 2px; }
+    .total-shares-info .highlight { color: #16a34a; font-weight: 700; }
     .sector-tag { font-size: 11px; color: #94a3b8; }
 
     .etf-list { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; align-items: center; }
@@ -203,18 +210,17 @@ const PALETTE = ['#2563eb', '#7c3aed', '#ea580c', '#16a34a', '#db2777', '#f59e0b
       border: 1px solid; border-radius: 10px; padding: 7px 12px;
     }
     .etf-code { font-size: 11px; font-weight: 700; }
+    .share-change {
+      font-size: 11px; font-weight: 700; color: #16a34a;
+      font-family: ui-monospace, monospace;
+    }
     .weight-change {
-      display: flex; align-items: center; gap: 4px; font-size: 11px;
+      display: flex; align-items: center; gap: 4px; font-size: 10px;
       font-family: ui-monospace, monospace;
     }
     .prev-w { color: #94a3b8; }
     .arrow-right { color: #cbd5e1; font-size: 10px; }
     .curr-w { font-weight: 700; }
-    .delta-pill {
-      font-size: 11px; font-weight: 700; color: #16a34a;
-      background: #dcfce7; padding: 2px 7px; border-radius: 20px;
-      font-family: ui-monospace, monospace;
-    }
 
     .total-col { text-align: right; flex-shrink: 0; min-width: 90px; }
     .total-delta {

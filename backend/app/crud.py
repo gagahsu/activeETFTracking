@@ -182,31 +182,52 @@ def compute_diff(db: Session, etf_id: int, date1: datetime.date, date2: datetime
     for ticker in set(h1.keys()) | set(h2.keys()):
         if ticker in h2 and ticker not in h1:
             h = h2[ticker]
-            added.append({"stock": stock_summary(h), "weight": h.weight, "shares": h.shares})
+            added.append({
+                "stock": stock_summary(h), 
+                "weight": h.weight, 
+                "shares": h.shares,
+                "delta_shares": h.shares
+            })
         elif ticker in h1 and ticker not in h2:
             h = h1[ticker]
-            removed.append({"stock": stock_summary(h), "weight": h.weight, "prev_weight": h.weight, "shares": h.shares})
+            removed.append({
+                "stock": stock_summary(h), 
+                "weight": h.weight, 
+                "prev_weight": h.weight, 
+                "shares": 0,
+                "prev_shares": h.shares,
+                "delta_shares": -(h.shares or 0)
+            })
         else:
             curr, prev = h2[ticker], h1[ticker]
-            delta = round(curr.weight - prev.weight, 2)
+            delta_weight = round(curr.weight - prev.weight, 2)
+            
+            curr_s = curr.shares or 0
+            prev_s = prev.shares or 0
+            delta_s = curr_s - prev_s
+
             entry = {
                 "stock": stock_summary(curr),
                 "weight": curr.weight,
                 "prev_weight": prev.weight,
-                "delta": delta,
+                "delta": delta_weight,
                 "shares": curr.shares,
+                "prev_shares": prev.shares,
+                "delta_shares": delta_s,
             }
-            if delta > 0.01:
+            
+            # Use shares delta for categorization instead of weight delta
+            if delta_s > 0:
                 increased.append(entry)
-            elif delta < -0.01:
+            elif delta_s < 0:
                 decreased.append(entry)
             else:
                 unchanged.append(entry)
 
     return {
         "added": sorted(added, key=lambda x: x["weight"], reverse=True),
-        "increased": sorted(increased, key=lambda x: x["delta"], reverse=True),
-        "decreased": sorted(decreased, key=lambda x: x["delta"]),
+        "increased": sorted(increased, key=lambda x: x["delta_shares"], reverse=True),
+        "decreased": sorted(decreased, key=lambda x: x["delta_shares"]),
         "removed": sorted(removed, key=lambda x: x["weight"], reverse=True),
         "unchanged": sorted(unchanged, key=lambda x: x["weight"], reverse=True),
     }
@@ -270,13 +291,21 @@ def get_synchronized_increase(db: Session, date_from: datetime.date, date_to: da
                 "weight": item["weight"],
                 "prev_weight": item["prev_weight"],
                 "delta": item["delta"],
+                "shares": item["shares"],
+                "prev_shares": item["prev_shares"],
+                "delta_shares": item["delta_shares"],
             })
 
     result = [
-        {**v, "count": len(v["etfs"]), "total_delta": round(sum(e["delta"] for e in v["etfs"]), 2)}
+        {
+            **v, 
+            "count": len(v["etfs"]), 
+            "total_delta": round(sum(e["delta"] for e in v["etfs"]), 2),
+            "total_delta_shares": sum(e["delta_shares"] for e in v["etfs"])
+        }
         for v in stock_map.values()
     ]
-    return sorted(result, key=lambda x: (-x["count"], -x["total_delta"]))
+    return sorted(result, key=lambda x: (-x["count"], -(x["total_delta_shares"] or 0)))
 
 
 def get_radar(db: Session, target_date: datetime.date, mode: str) -> list:

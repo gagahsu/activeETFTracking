@@ -83,6 +83,11 @@ interface Section {
                   <span class="stock-name">{{ h.stock.name }}</span>
                   <span class="stock-ticker">{{ h.stock.ticker }}</span>
                 </div>
+                <div class="share-info" *ngIf="h.delta_shares">
+                   <span class="delta-shares" [style.color]="sec.color">
+                     {{ h.delta_shares > 0 ? '買進' : '賣出' }} {{ (h.delta_shares > 0 ? h.delta_shares : -h.delta_shares) / 1000 | number:'1.0-0' }} 張
+                   </span>
+                </div>
                 <span class="stock-sector" *ngIf="h.stock.sector">{{ h.stock.sector }}</span>
               </div>
               <div class="change-numbers">
